@@ -3,7 +3,7 @@ from jose import jwt
 from datetime import datetime,timedelta
 from dotenv import load_dotenv
 import os
-
+from jose import JWTError
 
 load_dotenv()
 
@@ -57,3 +57,21 @@ def create_access_token(
         SECRET_KEY,
         algorithm=ALGORITHM
     )
+
+def decode_token(
+        token:str
+):
+
+    try:
+
+        payload=jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+
+        return payload.get("sub")
+
+    except JWTError:
+
+        return None

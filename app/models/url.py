@@ -1,6 +1,12 @@
-from sqlalchemy import Column,Integer,String,DateTime
-from datetime import datetime
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DateTime,
+    ForeignKey
+)
 
+from datetime import datetime
 from app.db.base import Base
 
 
@@ -8,7 +14,11 @@ class URL(Base):
 
     __tablename__="urls"
 
-    id=Column(Integer,primary_key=True,index=True)
+    id=Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
     original_url=Column(
         String,
@@ -20,6 +30,11 @@ class URL(Base):
         unique=True,
         index=True,
         nullable=False
+    )
+
+    user_id=Column(
+        Integer,
+        ForeignKey("users.id")
     )
 
     created_at=Column(

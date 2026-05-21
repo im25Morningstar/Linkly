@@ -7,27 +7,39 @@ from app.db.session import get_db
 from app.models.url import URL
 from app.services.url_service import generate_short_code
 
-
+from app.api.dependencies import get_current_user
+from app.models.user import User
 router=APIRouter()
 
 
 @router.post("/shorten")
 def create_url(
     url:URLCreate,
-    db:Session=Depends(get_db)
+    db:Session=Depends(get_db),
+    current_user:User=Depends(
+        get_current_user
+    )
 ):
 
-    code=generate_short_code(db)
-    new_url=URL(
-        original_url=url.original_url,
-        short_code=code
+    code=generate_short_code(
+        db
     )
 
-    db.add(new_url)
+    new_url=URL(
+        original_url=url.original_url,
+        short_code=code,
+        user_id=current_user.id
+    )
+
+    db.add(
+        new_url
+    )
 
     db.commit()
 
-    db.refresh(new_url)
+    db.refresh(
+        new_url
+    )
 
     return {
         "short_url":
