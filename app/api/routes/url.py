@@ -18,18 +18,24 @@ from fastapi import HTTPException
 from app.repositories.url_repository import (
     get_by_short_code
 )
-
+from fastapi import Request
+from app.core.rate_limiter import rate_limit
 
 router=APIRouter()
 
 @router.post("/shorten")
 def create_url(
+    request:Request,
     url:URLCreate,
     db:Session=Depends(get_db),
     current_user:User=Depends(
         get_current_user
     )
 ):
+
+    rate_limit(
+        request
+    )
 
     code=(
         url.custom_alias
@@ -56,17 +62,20 @@ def create_url(
         expires_at=url.expires_at
     )
 
-    db.add(new_url)
+    db.add(
+        new_url
+    )
 
     db.commit()
 
-    db.refresh(new_url)
+    db.refresh(
+        new_url
+    )
 
     return {
         "short_url":
         f"http://localhost:8000/{code}"
     }
-
 
 
 @router.get("/my-links")
