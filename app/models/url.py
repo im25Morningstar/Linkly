@@ -9,16 +9,11 @@ from sqlalchemy import (
 from datetime import datetime
 from app.db.base import Base
 
-
 class URL(Base):
 
     __tablename__="urls"
 
-    id=Column(
-        Integer,
-        primary_key=True,
-        index=True
-    )
+    id=Column(Integer,primary_key=True,index=True)
 
     original_url=Column(
         String,
@@ -35,6 +30,11 @@ class URL(Base):
     user_id=Column(
         Integer,
         ForeignKey("users.id")
+    )
+
+    click_count=Column(
+        Integer,
+        default=0
     )
 
     created_at=Column(

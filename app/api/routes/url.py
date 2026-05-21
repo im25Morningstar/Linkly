@@ -9,6 +9,17 @@ from app.services.url_service import generate_short_code
 
 from app.api.dependencies import get_current_user
 from app.models.user import User
+from app.repositories.url_repository import (
+    get_user_links
+)
+
+from fastapi.responses import RedirectResponse
+from fastapi import HTTPException
+from app.repositories.url_repository import (
+    get_by_short_code
+)
+
+
 router=APIRouter()
 
 
@@ -46,11 +57,47 @@ def create_url(
         f"http://localhost:8000/{code}"
     }
 
-from fastapi.responses import RedirectResponse
-from fastapi import HTTPException
-from app.repositories.url_repository import (
-    get_by_short_code
-)
+
+
+@router.get("/my-links")
+def my_links(
+    current_user:User=Depends(
+        get_current_user
+    ),
+    db:Session=Depends(
+        get_db
+    )
+):
+
+    links=get_user_links(
+        db,
+        current_user.id
+    )
+
+    result=[]
+
+    for link in links:
+
+        result.append(
+            {
+                "original_url":
+                link.original_url,
+
+                "short_code":
+                link.short_code,
+
+                "click_count":
+                link.click_count
+            }
+        )
+
+    return {
+        "total_links":
+        len(result),
+
+        "links":
+        result
+    }
 
 
 @router.get("/{short_code}")
@@ -65,11 +112,17 @@ def redirect_url(
     )
 
     if not url:
+
         raise HTTPException(
             status_code=404,
             detail="URL not found"
         )
 
+    url.click_count += 1
+
+    db.commit()
+
     return RedirectResponse(
         url.original_url
     )
+
