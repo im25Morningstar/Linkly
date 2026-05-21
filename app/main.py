@@ -4,21 +4,26 @@ from app.db.base import Base
 from app.db.session import engine
 
 from app.api.routes.url import router
+from app.api.routes.auth import router as auth_router
 
 
 Base.metadata.create_all(
     bind=engine
 )
 
-
 app=FastAPI(
-    title="URL Shortener API"
+    title="Linkly"
 )
 
 app.include_router(
     router,
-    prefix="/url",
     tags=["URL"]
+)
+
+app.include_router(
+    auth_router,
+    prefix="/auth",
+    tags=["Authentication"]
 )
 
 
@@ -26,5 +31,5 @@ app.include_router(
 def home():
 
     return {
-        "message":"API running"
+        "message":"Linkly API running"
     }
