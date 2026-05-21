@@ -22,7 +22,6 @@ from app.repositories.url_repository import (
 
 router=APIRouter()
 
-
 @router.post("/shorten")
 def create_url(
     url:URLCreate,
@@ -32,25 +31,36 @@ def create_url(
     )
 ):
 
-    code=generate_short_code(
-        db
+    code=(
+        url.custom_alias
+        if url.custom_alias
+        else generate_short_code(db)
     )
+
+    existing=get_by_short_code(
+        db,
+        code
+    )
+
+    if existing:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Alias already exists"
+        )
 
     new_url=URL(
         original_url=url.original_url,
         short_code=code,
-        user_id=current_user.id
+        user_id=current_user.id,
+        expires_at=url.expires_at
     )
 
-    db.add(
-        new_url
-    )
+    db.add(new_url)
 
     db.commit()
 
-    db.refresh(
-        new_url
-    )
+    db.refresh(new_url)
 
     return {
         "short_url":
@@ -99,6 +109,8 @@ def my_links(
         result
     }
 
+from datetime import datetime
+
 
 @router.get("/{short_code}")
 def redirect_url(
@@ -116,6 +128,18 @@ def redirect_url(
         raise HTTPException(
             status_code=404,
             detail="URL not found"
+        )
+
+    if (
+        url.expires_at
+        and
+        datetime.utcnow()
+        > url.expires_at
+    ):
+
+        raise HTTPException(
+            status_code=400,
+            detail="Link expired"
         )
 
     url.click_count += 1
